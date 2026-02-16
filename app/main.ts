@@ -89,7 +89,7 @@ const server = net.createServer((socket) => {
 
       const { req: request, consumed } = parsed;
 
-      buffer = buffer.slice(consumed);
+      buffer = buffer.subarray(consumed);
 
       const { method, path, headers: headersMap, body } = request;
 
@@ -145,7 +145,7 @@ const server = net.createServer((socket) => {
               const contentLength = parseInt(headersMap.get("content-length") || '0', 10) || 0;
               const requestBody = body || "";
 
-              const fileContentToWrite = requestBody.slice(0, contentLength);
+              const fileContentToWrite = requestBody.subarray(0, contentLength);
               fs.writeFileSync(filePath, fileContentToWrite);
               console.log(`File written successfully: ${filePath}`);
 
