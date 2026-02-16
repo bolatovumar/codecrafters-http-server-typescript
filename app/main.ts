@@ -73,7 +73,7 @@ const server = net.createServer((socket) => {
             fs.writeFileSync(filePath, fileContentToWrite);
             console.log(`File written successfully: ${filePath}`);
 
-            socket.write("HTTP/1.1 200 OK\r\n\r\n");
+            socket.write("HTTP/1.1 201 Created\r\n\r\n");
             break;
           default:
             socket.write(NOT_FOUND_RESPONSE);
