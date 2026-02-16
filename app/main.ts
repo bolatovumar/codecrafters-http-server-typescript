@@ -4,9 +4,11 @@ import * as fs from "fs";
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-const NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found";
-const OK_RESPONSE = "HTTP/1.1 200 OK";
-const CREATED_RESPONSE = "HTTP/1.1 201 Created";
+const CRLF = "\r\n";
+
+const NOT_FOUND_STATUS_CODE = "HTTP/1.1 404 Not Found";
+const OK_STATUS_CODE = "HTTP/1.1 200 OK";
+const CREATED_STATUS_CODE = "HTTP/1.1 201 Created";
 
 function getDirectoryFromArgs(): string | undefined {
   const argv = Bun.argv;
@@ -38,15 +40,29 @@ const server = net.createServer((socket) => {
     console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
     switch (endpoint) {
       case "":
-        socket.write(CREATED_RESPONSE);
+        socket.write(CREATED_STATUS_CODE);
         break;
       case "echo":
         const echoText = path.split("/")[2];
-        socket.write(`${OK_RESPONSE}\r\nContent-Type: text/plain\r\nContent-Length: ${echoText.length}\r\n\r\n${echoText}`);
+        socket.write(OK_STATUS_CODE);
+        socket.write(CRLF);
+        socket.write(`Content-Type: text/plain${CRLF}`);
+        socket.write(CRLF);
+        socket.write(`Content-Length: ${echoText.length}`);
+        socket.write(CRLF);
+        socket.write(CRLF);
+        socket.write(echoText);
         break;
       case "user-agent":
         const userAgent = headersMap.get("User-Agent") || "";
-        socket.write(`${OK_RESPONSE}\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`);
+        socket.write(OK_STATUS_CODE);
+        socket.write(CRLF);
+        socket.write(`Content-Type: text/plain`);
+        socket.write(CRLF);
+        socket.write(`Content-Length: ${userAgent.length}`);
+        socket.write(CRLF);
+        socket.write(CRLF);
+        socket.write(userAgent);
         break;
       case "files":
         console.log(`Handling ${method} file request for path:`, restPath);
@@ -57,11 +73,18 @@ const server = net.createServer((socket) => {
             if (fs.existsSync(filePath)) {
               console.log(`File found: ${filePath}`);
               const fileContent = fs.readFileSync(filePath);
-              socket.write(`${OK_RESPONSE}\r\nContent-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}`);
+              
+              socket.write(OK_STATUS_CODE);
+              socket.write(CRLF);
+              socket.write(`Content-Type: application/octet-stream`);
+              socket.write(CRLF);
+              socket.write(`Content-Length: ${fileContent.length}`);
+              socket.write(CRLF);
+              socket.write(CRLF);
               socket.write(fileContent);
             } else {
               console.log(`File not found: ${filePath}`);
-              socket.write(NOT_FOUND_RESPONSE);
+              socket.write(NOT_FOUND_STATUS_CODE);
             }
             break;
           case "POST":
@@ -72,17 +95,18 @@ const server = net.createServer((socket) => {
             fs.writeFileSync(filePath, fileContentToWrite);
             console.log(`File written successfully: ${filePath}`);
 
-            socket.write(CREATED_RESPONSE);
+            socket.write(CREATED_STATUS_CODE);
             break;
           default:
-            socket.write(NOT_FOUND_RESPONSE);
+            socket.write(NOT_FOUND_STATUS_CODE);
         }
         break;
       default:
-        socket.write(NOT_FOUND_RESPONSE);
+        socket.write(NOT_FOUND_STATUS_CODE);
     }
 
-    socket.write("\r\n\r\n");
+    socket.write(CRLF);
+    socket.write(CRLF);
     socket.end();
   });
 });
