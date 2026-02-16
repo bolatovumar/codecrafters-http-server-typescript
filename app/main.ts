@@ -42,7 +42,7 @@ const server = net.createServer((socket) => {
     console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
     switch (endpoint) {
       case "":
-        socket.write(CREATED_STATUS_CODE);
+        socket.write(OK_STATUS_CODE);
         break;
       case "echo":
         const echoText = path.split("/")[2];
