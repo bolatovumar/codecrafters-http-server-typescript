@@ -2,9 +2,6 @@ import * as net from "net";
 import * as fs from "fs";
 import { gzipSync } from "zlib";
 
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-console.log("Logs from your program will appear here!");
-
 const CARRIAGE_RETURN = "\r";
 const LINE_FEED = "\n";
 const CRLF = CARRIAGE_RETURN + LINE_FEED;
