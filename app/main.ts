@@ -49,25 +49,21 @@ const server = net.createServer((socket) => {
         socket.write(OK_STATUS_CODE);
         break;
       case "echo":
+        const encodeWithGzip = acceptEncodingHeader?.split(',').map(el => el.trim()).includes('gzip');
         const echoText = path.split("/")[2];
+        const responseText = encodeWithGzip ? gzipSync(echoText) : echoText;
         socket.write(OK_STATUS_CODE);
         socket.write(CRLF);
         socket.write(`Content-Type: text/plain`);
         socket.write(CRLF);
-        socket.write(`Content-Length: ${echoText.length}`);
+        socket.write(`Content-Length: ${responseText.length}`);
         socket.write(CRLF);
-        const encodeWithGzip = acceptEncodingHeader?.split(',').map(el => el.trim()).includes('gzip');
         if (encodeWithGzip) {
           socket.write(`Content-Encoding: gzip`);
           socket.write(CRLF);
         }
         socket.write(CRLF);
-        if (encodeWithGzip) {
-          const gzip = gzipSync(echoText);
-          socket.write(gzip);
-        } else {
-          socket.write(echoText);
-        }
+        socket.write(responseText);
         break;
       case "user-agent":
         const userAgent = headersMap.get("User-Agent") || "";
