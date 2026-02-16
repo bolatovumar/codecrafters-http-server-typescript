@@ -4,7 +4,9 @@ import * as fs from "fs";
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-const CRLF = "\r\n";
+const CARRIAGE_RETURN = "\r";
+const LINE_FEED = "\n";
+const CRLF = CARRIAGE_RETURN + LINE_FEED;
 
 const NOT_FOUND_STATUS_CODE = "HTTP/1.1 404 Not Found";
 const OK_STATUS_CODE = "HTTP/1.1 200 OK";
