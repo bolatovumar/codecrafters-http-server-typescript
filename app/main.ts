@@ -19,7 +19,8 @@ const server = net.createServer((socket) => {
       headersMap.set(key, value);
     }
     const [_, path] = reqLine.split(" ");
-    const [__, endpoint, restPath] = path.split("/")[1];
+    const [__, endpoint, restPath] = path.split("/");
+    console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
     switch (endpoint) {
       case "":
         socket.write("HTTP/1.1 200 OK\r\n\r\n");
@@ -33,14 +34,17 @@ const server = net.createServer((socket) => {
         socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`);
         break;
       case "files":
+        console.log('Handling file request for path:', restPath);
         const filename = restPath;
         // Check if file exists in tmp folder
         const filePath = `./tmp/${filename}`;
         if (fs.existsSync(filePath)) {
+          console.log(`File found: ${filePath}`);
           const fileContent = fs.readFileSync(filePath);
           socket.write(`HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n\r\n`);
           socket.write(fileContent);
         } else {
+          console.log(`File not found: ${filePath}`);
           socket.write(NOT_FOUND_RESPONSE);
         }
         break;
