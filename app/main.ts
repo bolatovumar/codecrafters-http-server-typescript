@@ -48,7 +48,7 @@ const server = net.createServer((socket) => {
         const echoText = path.split("/")[2];
         socket.write(OK_STATUS_CODE);
         socket.write(CRLF);
-        socket.write(`Content-Type: text/plain${CRLF}`);
+        socket.write(`Content-Type: text/plain`);
         socket.write(CRLF);
         socket.write(`Content-Length: ${echoText.length}`);
         socket.write(CRLF);
