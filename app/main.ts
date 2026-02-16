@@ -37,7 +37,7 @@ const server = net.createServer((socket) => {
         console.log('Handling file request for path:', restPath);
         const filename = restPath;
         // Check if file exists in tmp folder
-        const filePath = `./tmp/${filename}`;
+        const filePath = `/tmp/${filename}`;
         if (fs.existsSync(filePath)) {
           console.log(`File found: ${filePath}`);
           const fileContent = fs.readFileSync(filePath);
