@@ -1,5 +1,6 @@
 import * as net from "net";
 import * as fs from "fs";
+import { gzipSync } from "zlib";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
@@ -55,12 +56,18 @@ const server = net.createServer((socket) => {
         socket.write(CRLF);
         socket.write(`Content-Length: ${echoText.length}`);
         socket.write(CRLF);
-        if (acceptEncodingHeader?.split(',').map(el => el.trim()).includes('gzip')) {
+        const encodeWithGzip = acceptEncodingHeader?.split(',').map(el => el.trim()).includes('gzip');
+        if (encodeWithGzip) {
           socket.write(`Content-Encoding: gzip`);
           socket.write(CRLF);
         }
         socket.write(CRLF);
-        socket.write(echoText);
+        if (encodeWithGzip) {
+          const gzip = gzipSync(echoText);
+          socket.write(gzip);
+        } else {
+          socket.write(echoText);
+        }
         break;
       case "user-agent":
         const userAgent = headersMap.get("User-Agent") || "";
