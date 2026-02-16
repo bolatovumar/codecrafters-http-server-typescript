@@ -96,7 +96,7 @@ const server = net.createServer((socket) => {
       const [_, endpoint, restPath] = path.split("/");
       console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
 
-      const acceptEncodingHeader = headersMap.get("accept-Encoding");
+      const acceptEncodingHeader = headersMap.get("accept-encoding");
 
       switch (endpoint) {
         case "":
@@ -114,7 +114,7 @@ const server = net.createServer((socket) => {
           }, responseText);
           break;
         case "user-agent":
-          const userAgent = headersMap.get("user-Agent") || "";
+          const userAgent = headersMap.get("user-agent") || "";
 
           writeResponse(socket, OK_STATUS_CODE, {
             "Content-Type": "text/plain",
@@ -142,7 +142,7 @@ const server = net.createServer((socket) => {
               }
               break;
             case "POST":
-              const contentLength = parseInt(headersMap.get("content-Length") || '0', 10) || 0;
+              const contentLength = parseInt(headersMap.get("content-length") || '0', 10) || 0;
               const requestBody = body || "";
 
               const fileContentToWrite = requestBody.slice(0, contentLength);
