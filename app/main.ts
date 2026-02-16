@@ -4,7 +4,9 @@ import * as fs from "fs";
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-const NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n\r\n";
+const NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found";
+const OK_RESPONSE = "HTTP/1.1 200 OK";
+const CREATED_RESPONSE = "HTTP/1.1 201 Created";
 
 function getDirectoryFromArgs(): string | undefined {
   const argv = Bun.argv;
@@ -36,15 +38,15 @@ const server = net.createServer((socket) => {
     console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
     switch (endpoint) {
       case "":
-        socket.write("HTTP/1.1 200 OK\r\n\r\n");
+        socket.write(CREATED_RESPONSE);
         break;
       case "echo":
         const echoText = path.split("/")[2];
-        socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${echoText.length}\r\n\r\n${echoText}`);
+        socket.write(`${OK_RESPONSE}\r\nContent-Type: text/plain\r\nContent-Length: ${echoText.length}\r\n\r\n${echoText}`);
         break;
       case "user-agent":
         const userAgent = headersMap.get("User-Agent") || "";
-        socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`);
+        socket.write(`${OK_RESPONSE}\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`);
         break;
       case "files":
         console.log(`Handling ${method} file request for path:`, restPath);
@@ -55,7 +57,7 @@ const server = net.createServer((socket) => {
             if (fs.existsSync(filePath)) {
               console.log(`File found: ${filePath}`);
               const fileContent = fs.readFileSync(filePath);
-              socket.write(`HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n\r\n`);
+              socket.write(`${OK_RESPONSE}\r\nContent-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}`);
               socket.write(fileContent);
             } else {
               console.log(`File not found: ${filePath}`);
@@ -63,9 +65,6 @@ const server = net.createServer((socket) => {
             }
             break;
           case "POST":
-            // $ curl -v --data "12345" -H "Content-Type: application/octet-stream" http://localhost:4221/files/file_123
-
-            // write the file content to the specified file in the directory
             const contentLength = parseInt(headersMap.get("Content-Length") || '0', 10) || 0;
             const requestBody = body || "";
 
@@ -73,7 +72,7 @@ const server = net.createServer((socket) => {
             fs.writeFileSync(filePath, fileContentToWrite);
             console.log(`File written successfully: ${filePath}`);
 
-            socket.write("HTTP/1.1 201 Created\r\n\r\n");
+            socket.write(CREATED_RESPONSE);
             break;
           default:
             socket.write(NOT_FOUND_RESPONSE);
@@ -83,6 +82,7 @@ const server = net.createServer((socket) => {
         socket.write(NOT_FOUND_RESPONSE);
     }
 
+    socket.write("\r\n\r\n");
     socket.end();
   });
 });
