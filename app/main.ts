@@ -27,7 +27,7 @@ const server = net.createServer((socket) => {
   socket.on("data", (buf) => {
     const req = buf.toString("utf8");
     console.log(`Received request:\n${req}`);
-    const [reqLine, ...rest] = req.split("\r\n");
+    const [reqLine, ...rest] = req.split(CRLF);
     // console.log(`Request Line: ${reqLine}`);
     const body = rest.pop();
     const headersMap = new Map<string, string>();
