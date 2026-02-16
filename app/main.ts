@@ -55,7 +55,7 @@ const server = net.createServer((socket) => {
         socket.write(CRLF);
         socket.write(`Content-Length: ${echoText.length}`);
         socket.write(CRLF);
-        if (acceptEncodingHeader === 'gzip') {
+        if (acceptEncodingHeader?.split(',').map(el => el.trim()).includes('gzip')) {
           socket.write(`Content-Encoding: gzip`);
           socket.write(CRLF);
         }
