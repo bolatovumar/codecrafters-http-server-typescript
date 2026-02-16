@@ -40,6 +40,9 @@ const server = net.createServer((socket) => {
     const [method, path] = reqLine.split(" ");
     const [_, endpoint, restPath] = path.split("/");
     console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
+
+    const acceptEncodingHeader = headersMap.get("Accept-Encoding");
+
     switch (endpoint) {
       case "":
         socket.write(OK_STATUS_CODE);
@@ -52,6 +55,10 @@ const server = net.createServer((socket) => {
         socket.write(CRLF);
         socket.write(`Content-Length: ${echoText.length}`);
         socket.write(CRLF);
+        if (acceptEncodingHeader === 'gzip') {
+          socket.write(`Content-Encoding: gzip`);
+          socket.write(CRLF);
+        }
         socket.write(CRLF);
         socket.write(echoText);
         break;
