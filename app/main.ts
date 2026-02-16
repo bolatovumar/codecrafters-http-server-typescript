@@ -6,6 +6,19 @@ console.log("Logs from your program will appear here!");
 
 const NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n\r\n";
 
+function getDirectoryFromArgs(): string | undefined {
+  const argv = Bun.argv;
+  let directory: string | undefined;
+
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--directory") directory = argv[i + 1];
+    if (a.startsWith("--directory=")) directory = a.slice("--directory=".length);
+  }
+
+  return directory;
+}
+
 const server = net.createServer((socket) => {
   socket.on("data", (buf) => {
     const req = buf.toString("utf8");
@@ -36,8 +49,8 @@ const server = net.createServer((socket) => {
       case "files":
         console.log('Handling file request for path:', restPath);
         const filename = restPath;
-        // Check if file exists in tmp folder
-        const filePath = `/tmp/${filename}`;
+        //3 Check if file exists in tmp folder
+        const filePath = `${getDirectoryFromArgs()}${filename}`;
         if (fs.existsSync(filePath)) {
           console.log(`File found: ${filePath}`);
           const fileContent = fs.readFileSync(filePath);
