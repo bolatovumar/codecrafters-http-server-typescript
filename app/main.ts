@@ -66,7 +66,7 @@ function tryParseRequest(buffer: Buffer): { req: HttpReq; consumed: number } | n
   return { req: { method, path, headers, body, keepAlive }, consumed: total };
 }
 
-function writeResponse(socket: net.Socket, statusCode: string, headers: Record<string, string> = {}, body: string | Buffer = '') {
+function writeResponse(socket: net.Socket, statusCode: string, headers: Record<string, string>, body: string | Buffer = '') {
   socket.write(statusCode);
   socket.write(CRLF);
   for (const [key, value] of Object.entries(headers)) {
@@ -97,10 +97,17 @@ const server = net.createServer((socket) => {
       console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
 
       const acceptEncodingHeader = headersMap.get("accept-encoding");
+      let baseHeaders: Record<string, string> = {};
+      if (!request.keepAlive) {
+        console.log("Connection will be closed after response.");
+        baseHeaders = {
+          "Connection": "close"
+        };
+      }
 
       switch (endpoint) {
         case "":
-          writeResponse(socket, OK_STATUS_CODE);
+          writeResponse(socket, OK_STATUS_CODE, baseHeaders);
           break;
         case "echo":
           const encodeWithGzip = acceptEncodingHeader?.split(',').map(el => el.trim()).includes('gzip');
@@ -108,6 +115,7 @@ const server = net.createServer((socket) => {
           const responseText = encodeWithGzip ? gzipSync(echoText) : echoText;
 
           writeResponse(socket, OK_STATUS_CODE, {
+            ...baseHeaders,
             "Content-Type": "text/plain",
             "Content-Length": responseText.length.toString(),
             ...(encodeWithGzip ? { "Content-Encoding": "gzip" } : {})
@@ -117,6 +125,7 @@ const server = net.createServer((socket) => {
           const userAgent = headersMap.get("user-agent") || "";
 
           writeResponse(socket, OK_STATUS_CODE, {
+            ...baseHeaders,
             "Content-Type": "text/plain",
             "Content-Length": userAgent.length.toString()
           }, userAgent);
@@ -132,13 +141,14 @@ const server = net.createServer((socket) => {
                 const fileContent = fs.readFileSync(filePath);
 
                 writeResponse(socket, OK_STATUS_CODE, {
+                  ...baseHeaders,
                   "Content-Type": "application/octet-stream",
                   "Content-Length": fileContent.length.toString()
                 }, fileContent);
               } else {
                 console.log(`File not found: ${filePath}`);
 
-                writeResponse(socket, NOT_FOUND_STATUS_CODE);
+                writeResponse(socket, NOT_FOUND_STATUS_CODE, baseHeaders);
               }
               break;
             case "POST":
@@ -149,14 +159,14 @@ const server = net.createServer((socket) => {
               fs.writeFileSync(filePath, fileContentToWrite);
               console.log(`File written successfully: ${filePath}`);
 
-              writeResponse(socket, CREATED_STATUS_CODE);
+              writeResponse(socket, CREATED_STATUS_CODE, baseHeaders);
               break;
             default:
-              writeResponse(socket, NOT_FOUND_STATUS_CODE);
+              writeResponse(socket, NOT_FOUND_STATUS_CODE, baseHeaders);
           }
           break;
         default:
-          writeResponse(socket, NOT_FOUND_STATUS_CODE);
+          writeResponse(socket, NOT_FOUND_STATUS_CODE, baseHeaders);
       }
 
       if (!request.keepAlive) {
