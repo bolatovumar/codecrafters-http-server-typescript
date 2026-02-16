@@ -31,8 +31,8 @@ const server = net.createServer((socket) => {
       const [key, value] = header.split(": ");
       headersMap.set(key, value);
     }
-    const [_, path] = reqLine.split(" ");
-    const [__, endpoint, restPath] = path.split("/");
+    const [method, path] = reqLine.split(" ");
+    const [_, endpoint, restPath] = path.split("/");
     console.log(`Endpoint: ${endpoint}, Rest Path: ${restPath}`);
     switch (endpoint) {
       case "":
@@ -47,18 +47,36 @@ const server = net.createServer((socket) => {
         socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`);
         break;
       case "files":
-        console.log('Handling file request for path:', restPath);
-        const filename = restPath;
-        //3 Check if file exists in tmp folder
-        const filePath = `${getDirectoryFromArgs()}${filename}`;
-        if (fs.existsSync(filePath)) {
-          console.log(`File found: ${filePath}`);
-          const fileContent = fs.readFileSync(filePath);
-          socket.write(`HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n\r\n`);
-          socket.write(fileContent);
-        } else {
-          console.log(`File not found: ${filePath}`);
-          socket.write(NOT_FOUND_RESPONSE);
+        console.log(`Handling ${method} file request for path:`, restPath);
+        const filePath = `${getDirectoryFromArgs()}${restPath}`;
+
+        switch (method) {
+          case "GET":
+            if (fs.existsSync(filePath)) {
+              console.log(`File found: ${filePath}`);
+              const fileContent = fs.readFileSync(filePath);
+              socket.write(`HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n\r\n`);
+              socket.write(fileContent);
+            } else {
+              console.log(`File not found: ${filePath}`);
+              socket.write(NOT_FOUND_RESPONSE);
+            }
+            break;
+          case "POST":
+            // $ curl -v --data "12345" -H "Content-Type: application/octet-stream" http://localhost:4221/files/file_123
+
+            // write the file content to the specified file in the directory
+            const contentLength = parseInt(headersMap.get("Content-Length") || '0', 10) || 0;
+            const requestBody = body || "";
+
+            const fileContentToWrite = requestBody.slice(0, contentLength);
+            fs.writeFileSync(filePath, fileContentToWrite);
+            console.log(`File written successfully: ${filePath}`);
+
+            socket.write("HTTP/1.1 200 OK\r\n\r\n");
+            break;
+          default:
+            socket.write(NOT_FOUND_RESPONSE);
         }
         break;
       default:
